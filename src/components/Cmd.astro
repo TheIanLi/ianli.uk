@@ -1,0 +1,9 @@
+---
+// 命令块：每行一个 span，# 开头的行显示为注释（不带 $）
+interface Props {
+  cmd: string;
+}
+const lines = Astro.props.cmd.split('\n');
+---
+
+<pre class="cmd">{lines.map((l, i) => <><span class:list={['ln', { note: l.trimStart().startsWith('#') }]}>{l}</span>{i < lines.length - 1 && '\n'}</>)}</pre>

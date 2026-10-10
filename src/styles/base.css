@@ -1,0 +1,120 @@
+/* 全站共用：配色、字体、基础排版。首页星图和文章页都从这里取变量。 */
+:root {
+  --bg: #05060d;
+  --bg-2: #0c0f22;
+  --ink: #ebe9f6;
+  --ink-2: #a3a2bd;
+  --ink-3: #7a7996; /* 次要文字：对比度 4.8:1，满足 WCAG AA（原 #6d6c88 只有 4.0:1） */
+  --hair: rgba(196, 200, 255, 0.12);
+  --glass: rgba(12, 14, 28, 0.74);
+  --c-core: #f3efff;
+  --c-net: #5cb6ff;
+  --c-ai: #ffb054;
+  --c-proj: #ff6b8f;
+  --c-base: #a68fff;
+  --ok: #5fd39a;
+  --wip: #ffcf6b;
+  --old: #8a8aa3;
+  --font-ui: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Source Han Sans SC', system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Cascadia Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  color-scheme: dark;
+}
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+[hidden] {
+  display: none !important;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+a {
+  color: inherit;
+}
+img {
+  max-width: 100%;
+  height: auto;
+}
+:focus-visible {
+  outline: 2px solid var(--c-ai);
+  outline-offset: 2px;
+}
+
+/* 状态徽章 */
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  width: max-content;
+}
+.status::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.s-ok { color: var(--ok); }
+.s-wip { color: var(--wip); }
+.s-old { color: var(--old); }
+
+/* 小圆点（分类色） */
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--c);
+  box-shadow: 0 0 10px var(--c);
+  flex: none;
+  display: inline-block;
+}
+
+/* 命令块：普通行带 $ 提示符，# 开头的行是注释 */
+.cmd {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--hair);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--ink);
+  overflow-x: auto;
+  white-space: pre;
+}
+.cmd .ln::before { content: '$ '; color: var(--ink-3); }
+.cmd .ln.note { color: var(--ink-2); }
+.cmd .ln.note::before { content: ''; }
+
+/* 静态星点背景（纯 CSS，文章页和 404 用） */
+.starfield {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, rgba(205, 214, 255, 0.55), transparent 60%),
+    radial-gradient(1px 1px at 72% 9%, rgba(255, 226, 196, 0.45), transparent 60%),
+    radial-gradient(1.5px 1.5px at 38% 62%, rgba(255, 255, 255, 0.4), transparent 60%),
+    radial-gradient(1px 1px at 88% 47%, rgba(201, 184, 255, 0.5), transparent 60%),
+    radial-gradient(1px 1px at 22% 83%, rgba(205, 214, 255, 0.4), transparent 60%),
+    radial-gradient(1px 1px at 57% 31%, rgba(255, 255, 255, 0.35), transparent 60%),
+    radial-gradient(1.5px 1.5px at 93% 88%, rgba(255, 226, 196, 0.35), transparent 60%),
+    radial-gradient(ellipse 70% 50% at 80% -10%, rgba(92, 182, 255, 0.07), transparent 70%),
+    radial-gradient(ellipse 60% 50% at 0% 100%, rgba(166, 143, 255, 0.06), transparent 70%);
+  background-size: 420px 420px, 420px 420px, 420px 420px, 420px 420px, 420px 420px, 420px 420px, 420px 420px, 100% 100%, 100% 100%;
+  background-attachment: fixed;
+}

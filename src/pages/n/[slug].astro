@@ -1,0 +1,269 @@
+---
+// 节点文章页：纯静态，不加载 React 和 3D。
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Cmd from '../../components/Cmd.astro';
+import { getGraph } from '../../lib/graph';
+import { CATS, STATUS } from '../../lib/meta';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('nodes');
+  return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const { nodes } = await getGraph();
+const bySlug = new Map(nodes.map((n) => [n.slug, n]));
+const node = bySlug.get(entry.id)!;
+const neighbors = node.nb.map((s) => bySlug.get(s)!).sort((a, b) => a.code.localeCompare(b.code));
+const parent = node.parent ? bySlug.get(node.parent) : undefined;
+const children = nodes.filter((n) => n.parent === node.slug);
+const cat = CATS[node.cat];
+const st = STATUS[node.status];
+---
+
+<Base title={`${node.title} · IAN LI`} description={node.summary} bodyClass="starfield">
+  <main class="wrap" style={`--c:${cat.color}`}>
+    <nav class="top">
+      <a class="back" href={`/#${node.slug}`}>← 返回星图</a>
+      {parent && <a class="crumb" href={`/n/${parent.slug}/`}>{parent.title} /</a>}
+    </nav>
+
+    <header>
+      <div class="meta">
+        <i class="dot"></i><span>{cat.name}</span><span class="code">{node.code}</span>
+      </div>
+      <h1>{node.title}</h1>
+      <div class="row">
+        <span class:list={['status', st.cls]}>{st.name}</span>
+        <time datetime={node.date}>写于 {node.date}</time>
+        {node.updated && <time datetime={node.updated}>更新于 {node.updated}</time>}
+        {node.repo && <a class="repo" href={node.repo} target="_blank" rel="noopener">仓库 ↗</a>}
+      </div>
+      <p class="sum">{node.summary}</p>
+      {node.cmd && <Cmd cmd={node.cmd} />}
+    </header>
+
+    <article class="prose">
+      <Content />
+    </article>
+
+    {
+      children.length > 0 && (
+        <section class="links">
+          <h2>下属笔记</h2>
+          <ul>
+            {children.map((n) => (
+              <li style={`--c:${CATS[n.cat].color}`}>
+                <a href={`/n/${n.slug}/`}><i class="dot" />{n.title}</a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    {
+      neighbors.length > 0 && (
+        <section class="links">
+          <h2>相连节点</h2>
+          <ul>
+            {neighbors.map((n) => (
+              <li style={`--c:${CATS[n.cat].color}`}>
+                <a href={`/n/${n.slug}/`}><i class="dot" />{n.title}</a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+  </main>
+</Base>
+
+<style>
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding-block: calc(28px + env(safe-area-inset-top, 0px)) 80px;
+    padding-inline: 20px;
+    display: grid;
+    gap: 36px;
+  }
+  .top {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  .back {
+    color: var(--ink-2);
+    text-decoration: none;
+    border: 1px solid var(--hair);
+    border-radius: 999px;
+    padding: 6px 12px;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .back:hover {
+    color: var(--ink);
+    border-color: rgba(220, 224, 255, 0.3);
+  }
+  .crumb {
+    color: var(--ink-3);
+    text-decoration: none;
+  }
+  header {
+    display: grid;
+    gap: 14px;
+  }
+  .meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--ink-2);
+    text-transform: uppercase;
+  }
+  .code {
+    color: var(--ink-3);
+  }
+  h1 {
+    margin: 0;
+    font-size: clamp(26px, 5vw, 36px);
+    font-weight: 650;
+    letter-spacing: 0.01em;
+    line-height: 1.25;
+    text-wrap: balance;
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--ink-3);
+  }
+  .repo {
+    color: var(--ink-2);
+  }
+  .sum {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--ink-2);
+  }
+  .links h2 {
+    margin: 0 0 12px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 400;
+    letter-spacing: 0.2em;
+    color: var(--ink-3);
+    text-transform: uppercase;
+  }
+  .links ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .links a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    text-decoration: none;
+    padding: 6px 12px 6px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--hair);
+    background: rgba(255, 255, 255, 0.03);
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .links a:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(220, 224, 255, 0.3);
+  }
+  .links .dot {
+    width: 6px;
+    height: 6px;
+    box-shadow: none;
+  }
+
+  /* 正文排版：Markdown 生成的元素不带本组件的作用域，所以用 :global */
+  .prose {
+    font-size: 16px;
+    line-height: 1.85;
+    color: #d9d7e8;
+    min-width: 0;
+  }
+  .prose :global(h2) {
+    font-size: 22px;
+    margin: 2em 0 0.6em;
+    line-height: 1.35;
+  }
+  .prose :global(h3) {
+    font-size: 18px;
+    margin: 1.6em 0 0.5em;
+  }
+  .prose :global(p),
+  .prose :global(ul),
+  .prose :global(ol) {
+    margin: 0 0 1.1em;
+  }
+  .prose :global(a) {
+    color: var(--c-net);
+    text-underline-offset: 3px;
+  }
+  .prose :global(code) {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+  }
+  .prose :global(:not(pre) > code) {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid var(--hair);
+    border-radius: 5px;
+    padding: 0.1em 0.4em;
+  }
+  .prose :global(pre) {
+    margin: 0 0 1.3em;
+    padding: 14px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--hair);
+    overflow-x: auto;
+    font-size: 13.5px;
+    line-height: 1.65;
+  }
+  .prose :global(blockquote) {
+    margin: 0 0 1.1em;
+    padding: 2px 16px;
+    border-left: 2px solid var(--c);
+    color: var(--ink-2);
+  }
+  .prose :global(img) {
+    border-radius: 10px;
+    border: 1px solid var(--hair);
+  }
+  .prose :global(table) {
+    display: block;
+    overflow-x: auto;
+    border-collapse: collapse;
+    margin: 0 0 1.3em;
+    font-size: 14px;
+  }
+  .prose :global(th),
+  .prose :global(td) {
+    border: 1px solid var(--hair);
+    padding: 6px 12px;
+  }
+  .prose :global(hr) {
+    border: 0;
+    border-top: 1px dashed var(--hair);
+    margin: 2em 0;
+  }
+</style>

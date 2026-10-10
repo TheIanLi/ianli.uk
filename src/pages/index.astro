@@ -1,0 +1,129 @@
+---
+// 首页：3D 星图岛 + 2D 节点列表（无 WebGL / 无 JS 时的退路，也给搜索引擎读）
+import Base from '../layouts/Base.astro';
+import NodeList from '../components/NodeList.astro';
+import StarMap from '../starmap/StarMap';
+import { getGraph } from '../lib/graph';
+
+const graph = await getGraph();
+---
+
+<Base title="IAN LI · 星图" bodyClass="starfield home">
+  <script is:inline slot="head">
+    // 支持 WebGL 就先隐藏列表，避免 3D 加载完之前闪一下 2D 内容
+    try {
+      var c = document.createElement('canvas');
+      if (c.getContext('webgl2') || c.getContext('webgl')) {
+        document.documentElement.classList.add('has-3d');
+        // 保险：15 秒后 3D 还没就绪（脚本加载失败或网络太慢），先显示 2D 列表；3D 之后加载成功会再切回来
+        setTimeout(function () {
+          var h = document.documentElement;
+          if (!h.classList.contains('sm-ready')) h.classList.remove('has-3d');
+        }, 15000);
+      }
+    } catch (e) {}
+  </script>
+
+  <div id="sm-loader" aria-hidden="true"><i></i></div>
+  <StarMap client:only="react" graph={graph} />
+
+  <main id="fallback" class="wrap">
+    <header>
+      <div class="domain">ianli.uk · 星图</div>
+      <h1>IAN LI</h1>
+      <p>折腾记录与个人笔记</p>
+      <a class="gh" href="https://github.com/TheIanLi" target="_blank" rel="noopener">GitHub ↗</a>
+    </header>
+    <NodeList />
+  </main>
+</Base>
+
+<style is:global>
+  /* 有 3D 时：页面不滚动、隐藏列表；3D 就绪前显示一个脉动的光点 */
+  /* 内容全是固定定位，html/body 必须撑满，否则背景渐变画在 0 高度区域里、看起来是灰色 */
+  html.has-3d,
+  .has-3d body.home {
+    height: 100%;
+  }
+  .has-3d body.home {
+    overflow: hidden;
+    background: var(--bg) radial-gradient(ellipse 80% 70% at 50% 46%, var(--bg-2), var(--bg) 72%);
+  }
+  .has-3d #fallback {
+    display: none;
+  }
+  #sm-loader {
+    display: none;
+  }
+  .has-3d:not(.sm-ready) #sm-loader {
+    display: grid;
+    position: fixed;
+    inset: 0;
+    place-items: center;
+  }
+  #sm-loader i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #fff4e6;
+    box-shadow: 0 0 12px 3px rgba(255, 220, 180, 0.6), 0 0 40px 10px rgba(255, 180, 120, 0.15);
+    animation: sm-pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes sm-pulse {
+    50% {
+      transform: scale(1.8);
+      opacity: 0.6;
+    }
+  }
+</style>
+
+<style>
+  .wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding-block: calc(56px + env(safe-area-inset-top, 0px)) 64px;
+    padding-inline: 20px;
+    display: grid;
+    gap: 40px;
+  }
+  header {
+    display: grid;
+    gap: 8px;
+  }
+  .domain {
+    font-family: var(--font-mono);
+    color: var(--ink-3);
+    text-transform: uppercase;
+    letter-spacing: 0.32em;
+    font-size: 10px;
+  }
+  h1 {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: clamp(22px, 4vw, 32px);
+    letter-spacing: 0.42em;
+    line-height: 1;
+  }
+  p {
+    margin: 0;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    color: var(--ink-2);
+  }
+  .gh {
+    justify-self: start;
+    margin-top: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--ink-2);
+    border: 1px solid var(--hair);
+    border-radius: 999px;
+    padding: 6px 12px;
+    text-decoration: none;
+  }
+  .gh:hover {
+    color: var(--ink);
+    border-color: rgba(220, 224, 255, 0.28);
+  }
+</style>

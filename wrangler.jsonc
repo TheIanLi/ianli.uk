@@ -1,0 +1,14 @@
+// Cloudflare Workers 部署配置（纯静态站：只托管 dist 里的静态文件，没有 Worker 代码）
+// 文档：https://developers.cloudflare.com/workers/framework-guides/web-apps/astro/
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // 必须和 Cloudflare 后台里的 Worker 名字一致，否则 Workers Builds 会构建失败
+  "name": "weathered-king-9548",
+  "compatibility_date": "2026-10-10",
+  "assets": {
+    "directory": "./dist",
+    // 找不到的路径返回 dist/404.html（"这个坐标没有星星"）
+    "not_found_handling": "404-page"
+  }
+  // 故意不写 routes：域名 ianli.uk 继续由后台管理，部署不会改动任何域名绑定或 DNS
+}

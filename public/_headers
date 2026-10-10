@@ -1,0 +1,4 @@
+# Cloudflare 静态资源响应头。
+# /_astro/ 里的文件名带内容哈希，内容一变文件名就变，所以可以放心让浏览器长期缓存（第二次访问不用再下载）。
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable

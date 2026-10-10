@@ -2,10 +2,11 @@
 // 首页：3D 星图岛 + 2D 节点列表（无 WebGL / 无 JS 时的退路，也给搜索引擎读）
 import Base from '../layouts/Base.astro';
 import NodeList from '../components/NodeList.astro';
-import StarMap from '../starmap/StarMap';
 import { getGraph } from '../lib/graph';
 
 const graph = await getGraph();
+// 节点数据内嵌到页面里，启动器读出来交给 3D（转义 <，防止内容里出现 </script> 截断）
+const graphJson = JSON.stringify(graph).replace(/</g, '\\u003c');
 ---
 
 <Base title="IAN LI · 星图" bodyClass="starfield home">
@@ -13,19 +14,26 @@ const graph = await getGraph();
     // 支持 WebGL 就先隐藏列表，避免 3D 加载完之前闪一下 2D 内容
     try {
       var c = document.createElement('canvas');
-      if (c.getContext('webgl2') || c.getContext('webgl')) {
-        document.documentElement.classList.add('has-3d');
-        // 保险：15 秒后 3D 还没就绪（脚本加载失败或网络太慢），先显示 2D 列表；3D 之后加载成功会再切回来
-        setTimeout(function () {
-          var h = document.documentElement;
-          if (!h.classList.contains('sm-ready')) h.classList.remove('has-3d');
-        }, 15000);
-      }
+      if (c.getContext('webgl2') || c.getContext('webgl')) document.documentElement.classList.add('has-3d');
+      // 网速慢不再自动切 2D：启动器（src/starmap/boot.ts）显示下载进度，慢时给"先看列表"按钮
     } catch (e) {}
   </script>
 
-  <div id="sm-loader" aria-hidden="true"><i></i></div>
-  <StarMap client:only="react" graph={graph} />
+  <div id="sm-loader">
+    <i class="dot" aria-hidden="true"></i>
+    <div class="track" aria-hidden="true"><span id="sm-bar"></span></div>
+    <div class="info" role="status"><span id="sm-msg">加载星图</span> <span id="sm-pct">0%</span></div>
+    <button id="sm-skip" type="button" hidden>网速较慢？先看列表 →</button>
+  </div>
+  <div id="sm-root"></div>
+  <div id="sm-chip" role="status" hidden>星图加载中</div>
+  <button id="sm-enter" type="button" hidden>进入 3D 星图 ✦</button>
+  <script type="application/json" id="sm-graph" set:html={graphJson} />
+  <script type="application/json" id="sm-manifest">null</script>
+  <script>
+    import { boot } from '../starmap/boot';
+    boot();
+  </script>
 
   <main id="fallback" class="wrap">
     <header>
@@ -56,12 +64,74 @@ const graph = await getGraph();
     display: none;
   }
   .has-3d:not(.sm-ready) #sm-loader {
-    display: grid;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
     position: fixed;
     inset: 0;
-    place-items: center;
+    padding-inline: 24px;
+    font-family: var(--font-mono);
   }
-  #sm-loader i {
+  #sm-loader .track {
+    width: min(220px, 60vw);
+    height: 3px;
+    border-radius: 2px;
+    background: rgba(196, 200, 255, 0.12);
+    overflow: hidden;
+  }
+  #sm-bar {
+    display: block;
+    height: 100%;
+    transform: scaleX(0);
+    transform-origin: left;
+    background: linear-gradient(90deg, #a68fff, #ffb054);
+    transition: transform 0.25s ease-out;
+  }
+  #sm-loader .info {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--ink-3);
+  }
+  #sm-pct {
+    color: var(--ink-2);
+    font-variant-numeric: tabular-nums;
+  }
+  #sm-skip,
+  #sm-enter,
+  #sm-chip {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--ink-2);
+    background: var(--glass);
+    border: 1px solid var(--hair);
+    border-radius: 999px;
+    padding: 8px 14px;
+  }
+  #sm-skip,
+  #sm-enter {
+    cursor: pointer;
+  }
+  #sm-skip:hover,
+  #sm-enter:hover {
+    color: var(--ink);
+    border-color: rgba(220, 224, 255, 0.28);
+  }
+  /* 列表模式下：右下角显示后台加载进度 / 加载完成后的"进入"按钮 */
+  #sm-chip,
+  #sm-enter {
+    position: fixed;
+    right: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    z-index: 5;
+  }
+  #sm-enter {
+    color: var(--ink);
+    box-shadow: 0 0 24px rgba(255, 176, 84, 0.18);
+  }
+  #sm-loader .dot {
     width: 6px;
     height: 6px;
     border-radius: 50%;

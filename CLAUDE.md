@@ -46,6 +46,7 @@ repo: https://github.com/TheIanLi/xxx   # 可选，只填已公开的仓库
 links/parent 写了不存在的 slug 会**直接构建失败**并提示是哪个文件。
 
 ## 星图代码结构（src/starmap/）
+- 加载链路：`boot.ts`（很小，最先跑）先用 fetch 下载 3D 脚本并显示真实进度 → 再 import `mount.tsx` 挂载 React。要下载的文件清单由构建插件 `scripts/sm-manifest.mjs` 写进 index.html。网速慢不自动切 2D：10 秒后给"先看列表"按钮，只有加载失败才自动显示列表。`public/_headers` 让 /_astro/ 长期缓存
 - `config.ts` 所有可调数值 · `device.ts` 档位/布局判定 · `store.ts` 界面状态（zustand，只放不逐帧变的）
 - `world.ts` 逐帧可变状态 + 力导向模拟 + 屏幕拾取 · `StarMap.tsx` 岛入口：输入、键盘、深链、降档
 - `scene/Scene.tsx` 场景 + Driver（逐帧主循环，useFrame 优先级 -10，必须最先跑）· `scene/NodeShapes.tsx` 五类造型

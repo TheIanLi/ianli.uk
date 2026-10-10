@@ -1,10 +1,11 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
+import { smManifest } from './scripts/sm-manifest.mjs';
 
 export default defineConfig({
   site: 'https://ianli.uk',
-  integrations: [react()],
+  integrations: [react(), smManifest()],
   // 关掉开发工具栏：它每次 DOM 变化都会扫描页面（点击节点弹出卡片时会造成明显卡顿），对本项目没用
   devToolbar: { enabled: false },
   vite: {

@@ -30,26 +30,14 @@ export function forcedTier(): Tier | null {
 }
 
 /**
- * 初始档位。网址加 ?tier=low|mid|high 可强制指定，方便测试。
- * 运行中还会根据实测帧率自动降档（见 StarMap 里的 PerformanceMonitor）。
+ * 初始档位：一律从最高档开始（访客基本是朋友，手机都不差）。网址加 ?tier=low|mid|high 可强制指定，方便测试。
+ * 唯一例外是没有显卡、用 CPU 软件渲染的环境（虚拟机、无头浏览器），真机不会遇到。
+ * 真跑不动时，运行中的自动降档（StarMap 里的 PerformanceMonitor + 质量阶梯）会按实测帧率往下调。
  */
 export function detectTier(): Tier {
   const forced = forcedTier();
   if (forced) return forced;
-
-  const nav = navigator as Navigator & { deviceMemory?: number };
-  const mem = nav.deviceMemory ?? 8;
-  const cores = nav.hardwareConcurrency ?? 8;
-  const gpu = gpuName();
-  const weakGpu = /swiftshader|llvmpipe|software|mali-[gt]?[4-7]\d\b|adreno \(tm\) [3-5]\d\d|powervr/i.test(gpu);
-
-  // iPhone / iPad：WebKit 为防指纹，核数一律报 2、不提供内存数，不能拿来判断；
-  // 直接按高档开始（触屏仍会收一点），真跑不动时由运行中的自动降档按实测帧率往下调
-  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
-  if (ios && !weakGpu) return 'high';
-
-  if (weakGpu || mem <= 2 || cores <= 4) return 'low';
-  if (coarsePointer() && (mem < 6 || cores < 8)) return 'mid';
+  if (/swiftshader|llvmpipe|software/i.test(gpuName())) return 'low';
   return 'high';
 }
 

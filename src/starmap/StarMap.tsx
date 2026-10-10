@@ -167,7 +167,7 @@ export default function StarMap({ graph }: { graph: GraphData }) {
       raf = requestAnimationFrame(loop);
       if (t - last < interval) return;
       last = t;
-      advance(t);
+      advance(t / 1000); // R3F 的 advance 要的是秒，rAF 给的是毫秒
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);

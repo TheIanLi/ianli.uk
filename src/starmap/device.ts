@@ -43,6 +43,11 @@ export function detectTier(): Tier {
   const gpu = gpuName();
   const weakGpu = /swiftshader|llvmpipe|software|mali-[gt]?[4-7]\d\b|adreno \(tm\) [3-5]\d\d|powervr/i.test(gpu);
 
+  // iPhone / iPad：WebKit 为防指纹，核数一律报 2、不提供内存数，不能拿来判断；
+  // 直接按高档开始（触屏仍会收一点），真跑不动时由运行中的自动降档按实测帧率往下调
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+  if (ios && !weakGpu) return 'high';
+
   if (weakGpu || mem <= 2 || cores <= 4) return 'low';
   if (coarsePointer() && (mem < 6 || cores < 8)) return 'mid';
   return 'high';

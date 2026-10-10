@@ -60,6 +60,12 @@ links/parent 写了不存在的 slug 会**直接构建失败**并提示是哪个
 - 仅开发模式：`?introSpeed=0.1` 慢放开场、`?timeScale=0.1` 慢放飞行和涟漪；控制台 `__sm` 是 world 对象
 - 无头浏览器（软件渲染）帧率很低，会触发自动降档；截图测试要加 `?tier=high`
 
+## 发布流程（以后写笔记只需要这样）
+1. 新建或修改 `src/content/nodes/<slug>.md`
+2. `git add -A && git commit -m "说明"`（提交前会自动扫描密钥）
+3. `git push` → Cloudflare 自动构建，一两分钟后 ianli.uk 更新；构建失败时线上保持旧版本
+- 本地分支 `history-local` 保存开发早期的完整历史，**永远不要推送**（旧提交里有不公开的子域名）
+
 ## 常用命令
 - `npm run dev` → 浏览器开 http://localhost:4321（Windows 浏览器直接能开）
 - `npm run build` → 构建到 `dist/`；`npm run preview` 预览构建结果
@@ -116,4 +122,4 @@ links/parent 写了不存在的 slug 会**直接构建失败**并提示是哪个
   - 暂未做（低优先级，见调研报告）：动画暂停按钮（WCAG 2.2.2）、读屏器可用的节点列表、three 资源 dispose
 - [x] 部署准备：wrangler.jsonc（纯静态 + 404 页，不写 routes 以免动域名）、.node-version 24、wrangler 固定版本
 - [ ] 阶段 3：404 风格、文章页打磨（宽屏利用两侧空间）、手机验收 ← 下一步（等用户验收 2a–2e）
-- [ ] 阶段 4：部署（先确认）
+- [x] 阶段 4：部署（2026-10-10）：GitHub 公开仓库 TheIanLi/ianli.uk（main）→ Cloudflare Workers Builds 连到 Worker `weathered-king-9548`，构建 `npm run build`、部署 `npx wrangler deploy`；域名 ianli.uk 由后台管理（wrangler.jsonc 不写 routes）

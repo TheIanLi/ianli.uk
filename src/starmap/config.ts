@@ -62,9 +62,9 @@ export const CONFIG = {
     linkLen: 14.5, // 普通连线的目标长度
     coreLinkLen: 18, // 连到本站核心的连线长度
     centerYLandscape: 1.25, // 宽屏时纵向收紧（>1 更扁，适合横屏）
-    centerYPortrait: 0.06, // 竖屏时纵向放松（<1 更高，填满手机屏幕）
-    centerXZPortrait: 2.2, // 竖屏时横向收紧（>1 更窄）
-    portraitYScale: 1.4, // 竖屏时显示层把纵向拉高的倍数（只影响显示，不影响模拟）
+    centerYPortrait: 0.45, // 竖屏时纵向放松（<1 更高，填满手机屏幕）
+    centerXZPortrait: 1.25, // 竖屏时横向收紧（>1 更窄）
+    portraitYScale: 1.12, // 竖屏时显示层把纵向拉高的倍数（只影响显示，不影响模拟）
     hotPull: 0.0035, // 悬停/选中时把邻居轻轻拉近
     stepsPerSecond: 60, // 模拟固定步频，和屏幕刷新率无关
   },

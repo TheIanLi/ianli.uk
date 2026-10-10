@@ -124,3 +124,10 @@ links/parent 写了不存在的 slug 会**直接构建失败**并提示是哪个
 - [x] 部署准备：wrangler.jsonc（纯静态 + 404 页，不写 routes 以免动域名）、.node-version 24、wrangler 固定版本
 - [ ] 阶段 3：404 风格、文章页打磨（宽屏利用两侧空间）、手机验收 ← 下一步（等用户验收 2a–2e）
 - [x] 阶段 4：部署（2026-10-10）：GitHub 公开仓库 TheIanLi/ianli.uk（main）→ Cloudflare Workers Builds 连到 Worker `weathered-king-9548`，构建 `npm run build`、部署 `npx wrangler deploy`；域名 ianli.uk 由后台管理（wrangler.jsonc 不写 routes）
+- [x] 部署后修复（2026-10-10，push 到 main 即自动上线）：
+  - 手机抖动：R3F `advance()` 要秒，之前传了毫秒
+  - 竖屏"竖菱形"：放宽竖屏三个挤压参数（centerYPortrait / centerXZPortrait / portraitYScale）
+  - 加载：显示真实下载进度，不再 15 秒强制 2D（见"加载链路"）
+  - 档位：所有真机一律从 high 开始，只有软件渲染走 low，跑不动靠自动降档（用户要求）；`?fps` 看档位和帧率
+- [ ] 旋臂星系预览（用户选的 A 方案，要先看预览再决定）：代码在**本地分支 `wip-spiral`**（未推送），开关 `?layout=spiral`，默认仍是 force。待办：旋臂不够明显（可试 twist≈0.085、gap≈6.5、尘埃更宽）、镜头适配偏小偏移；合并前把 camera.phi 改回 1.12。调好后推上去让用户手机看 `ianli.uk/?layout=spiral`
+- 暂缓：搬到日本 VPS（用户实测国内第二次访问已经不卡，2026-10-10 决定先不买）。以后若买：根域名 DNS 改动先确认；朋友想要子站时用 VPS 上的 WordPress 多站点（每人单独一条 DNS 记录，不用通配符）

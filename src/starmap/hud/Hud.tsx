@@ -9,7 +9,7 @@ const NAME = 'IAN LI';
 const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#%&*+/<>';
 
 /** 品牌标题：Syne 字体 + 渐变。出现时字母从乱码里逐个"解出来"；鼠标移上去再解码一次 */
-function Brand({ still }: { still: boolean }) {
+function Brand({ still, quiet }: { still: boolean; quiet: boolean }) {
   const [text, setText] = useState(NAME);
   const nameIn = useUI((s) => s.nameIn);
   const shown = still || nameIn;
@@ -32,8 +32,8 @@ function Brand({ still }: { still: boolean }) {
   }, [still]);
   // 开场时钟走到 nameAt（星尘快落地）时解码出现
   useEffect(() => {
-    if (nameIn && !still) decode();
-  }, [nameIn, still, decode]);
+    if (nameIn && !still && !quiet) decode(); // quiet：恢复画面时名字直接在那，不再解码一遍
+  }, [nameIn, still, quiet, decode]);
   return (
     <div className="brand">
       <div className="domain reveal">ianli.uk · 星图</div>
@@ -110,7 +110,7 @@ export function Hud({ world, reduce }: { world: World; reduce: boolean }) {
   return (
     <div className="hud-layer" key={nonce}>
       <header className="hud top">
-        <Brand still={reduce} />
+        <Brand still={reduce} quiet={world.resumed} />
         <div className="actions reveal">
           {compact ? replayBtn : searchBtn}
           <GitHubLink short={compact} />

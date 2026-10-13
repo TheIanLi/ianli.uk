@@ -106,6 +106,8 @@ export class World {
   introSpeed = 1;
   introDone = false;
   pendingSelect = -1;
+  resumed = false; // 这次不是从开场进来的，而是恢复了离开前的画面（从文章页回来）
+  resumeSnap = false; // 恢复后卡片第一次量出尺寸时，视口偏移直接到位，不再滑过去
 
   private rng: () => number;
   private tmp = new THREE.Vector3();

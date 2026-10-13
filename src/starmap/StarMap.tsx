@@ -4,6 +4,7 @@ import { advance, Canvas } from '@react-three/fiber';
 import { PerformanceMonitor } from '@react-three/drei';
 import { MotionConfig } from 'motion/react';
 import { CONFIG, type Tier } from './config';
+import { loadView, saveView, type SavedView } from './resume';
 import { coarsePointer, detectTier, forcedTier, hasWebGL, introSeen, isCompact, markIntroSeen, qualityLadder, reducedMotion } from './device';
 import { useUI } from './store';
 import { clamp, World, type GraphData } from './world';
@@ -32,7 +33,42 @@ class Fallback extends Component<{ children: ReactNode }, { failed: boolean }> {
   }
 }
 
+/** 恢复离开前的画面：跳过开场，镜头、节点位置、选中的节点直接摆到位。返回恢复时选中的节点（没有是 -1） */
+function resumeView(w: World, v: SavedView): number {
+  w.portrait = innerHeight > innerWidth * 1.2;
+  w.resumed = true;
+  w.introT = 99; // 开场时间直接拨到结束之后：节点、连线、标签都是最终状态
+  w.introId++;
+  w.warm.ready = true;
+  w.introDone = true;
+  w.hover = -1;
+  w.acc = 0;
+  w.alpha = 0.03;
+  w.labelW.fill(0);
+  for (let i = 0; i < w.n; i++) {
+    w.P[i].set(v.P[i * 3], v.P[i * 3 + 1], v.P[i * 3 + 2]);
+    w.V[i].set(0, 0, 0);
+  }
+  w.userZoomed = v.zoomed;
+  w.camG.th = w.camS.th = v.th;
+  w.camG.ph = w.camS.ph = v.ph;
+  w.camG.r = w.camS.r = v.r;
+  const i = v.sel ? w.nodes.findIndex((n) => n.slug === v.sel) : -1;
+  if (i >= 0) {
+    w.camG.tx.copy(w.P[i]);
+    if (w.portrait) w.camG.tx.y *= CONFIG.sim.portraitYScale;
+    w.lastSel = i; // 已经在节点上了，不要再飞一次
+    w.selAt = w.ms() - 1e6;
+    w.resumeSnap = true;
+  } else w.camG.tx.set(0, 0, 0);
+  w.camS.tx.copy(w.camG.tx);
+  useUI.setState({ hudIn: true, nameIn: true });
+  if (i >= 0) useUI.getState().select(i);
+  return i;
+}
+
 function startIntro(w: World, reduce: boolean, speed: number) {
+  w.resumed = false;
   w.portrait = innerHeight > innerWidth * 1.2; // 第一帧之前就确定横竖屏，预演布局才对
   const R0 = w.baseRadius(innerWidth, innerHeight);
   w.introStart = performance.now();
@@ -109,17 +145,32 @@ export default function StarMap({ graph }: { graph: GraphData }) {
     markIntroSeen();
   }, [ok, graph]);
 
+  // 从文章页回来：恢复离开前的画面，不重播开场（手动刷新、点"重放开场"照常播）
+  const [saved] = useState(() => (ok && !reduce ? loadView(world) : null));
+  const resumeHold = useRef<{ i: number; r: number } | null>(null);
+
   // 开场（首次 / 重放）
   useLayoutEffect(() => {
-    if (ok) startIntro(world, reduce, introSpeed);
-  }, [ok, world, reduce, nonce, introSpeed]);
+    if (!ok) return;
+    if (saved && nonce === 0) resumeHold.current = { i: resumeView(world, saved), r: saved.r };
+    else startIntro(world, reduce, introSpeed);
+  }, [ok, world, reduce, nonce, introSpeed, saved]);
+
+  // 离开页面（去读文章、关标签页）时记下当前画面
+  useEffect(() => {
+    if (!ok) return;
+    const onHide = () => saveView(world, useUI.getState().selected);
+    addEventListener('pagehide', onHide);
+    return () => removeEventListener('pagehide', onHide);
+  }, [ok, world]);
 
   // 深链：#slug 直接飞到节点；浏览器前进后退也跟着变
   useEffect(() => {
     if (!ok) return;
     const fromHash = () => {
       const slug = decodeURIComponent(location.hash.slice(1));
-      return world.nodes.findIndex((n) => n.slug === slug);
+      // 下属笔记（小卫星）没有自己的星：落到它的父节点上
+      return world.nodes.findIndex((n) => n.slug === slug || n.moons.some((m) => m.slug === slug));
     };
     const i = fromHash();
     if (i >= 0) {
@@ -137,6 +188,14 @@ export default function StarMap({ graph }: { graph: GraphData }) {
 
   // 选中/取消时调整镜头距离；视口偏移由 Panel 按实际尺寸设置
   useEffect(() => {
+    // 刚恢复画面：镜头距离用离开时的（用户可能手动缩放过），这一次不重算
+    const hold = resumeHold.current;
+    if (hold) {
+      if (hold.i !== selected) return; // 恢复的选中状态还没生效
+      resumeHold.current = null;
+      world.camG.r = hold.r;
+      return;
+    }
     if (selected >= 0) world.camG.r = CONFIG.camera.selectR[compact ? 'compact' : 'wide'];
     else {
       world.camG.r = world.baseRadius(innerWidth, innerHeight);

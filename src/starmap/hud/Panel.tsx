@@ -125,6 +125,12 @@ export function Panel({ world }: { world: World }) {
         world.off.gx = Math.round((w + 20) / 2);
         world.off.gy = 0;
       }
+      // 从文章页回来、恢复画面时：偏移直接到位，画面不滑动
+      if (world.resumeSnap) {
+        world.resumeSnap = false;
+        world.off.x = world.off.gx;
+        world.off.y = world.off.gy;
+      }
     });
     ro.observe(el);
     return () => ro.disconnect();
@@ -142,7 +148,7 @@ export function Panel({ world }: { world: World }) {
             className={`sm-panel sheet${full ? ' full' : ''}`}
             style={style}
             aria-live="polite"
-            initial={{ y: '105%' }}
+            initial={world.resumeSnap ? false : { y: '105%' }}
             animate={{ y: 0 }}
             exit={{ y: '105%' }}
             transition={{ type: 'spring', damping: 32, stiffness: 320 }}
@@ -170,7 +176,7 @@ export function Panel({ world }: { world: World }) {
             className="sm-panel card"
             style={style}
             aria-live="polite"
-            initial={{ x: 'calc(100% + 40px)', opacity: 0 }}
+            initial={world.resumeSnap ? false : { x: 'calc(100% + 40px)', opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: 'calc(100% + 40px)', opacity: 0 }}
             transition={{ type: 'spring', damping: 30, stiffness: 260 }}

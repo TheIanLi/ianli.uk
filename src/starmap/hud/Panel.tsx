@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { AnimatePresence, motion, useDragControls } from 'motion/react';
 import { CATS, STATUS } from '../../lib/meta';
 import { useUI } from '../store';
+import { readerClick } from '../reader';
 import type { World } from '../world';
 import type { GraphNode } from '../../lib/graph';
 
@@ -21,6 +22,7 @@ function Cmd({ cmd }: { cmd: string }) {
 
 function Body({ world, node, onPick }: { world: World; node: GraphNode; onPick: (i: number) => void }) {
   const deselect = useUI((s) => s.deselect);
+  const landOn = useUI((s) => s.landOn);
   const i = world.nodes.indexOf(node);
   const nbs = [...world.nb[i]].sort((a, b) => a - b);
   const st = STATUS[node.status];
@@ -66,7 +68,7 @@ function Body({ world, node, onPick }: { world: World; node: GraphNode; onPick: 
           <ul className="moons">
             {node.moons.map((m) => (
               <li key={m.slug}>
-                <a href={`/n/${m.slug}/`}>
+                <a href={`/n/${m.slug}/`} onClick={(e) => readerClick(e, `/n/${m.slug}/`, landOn)}>
                   <i />
                   {m.title}
                 </a>
@@ -76,7 +78,7 @@ function Body({ world, node, onPick }: { world: World; node: GraphNode; onPick: 
         </>
       )}
       <div className="p-foot">
-        <a className="read" href={`/n/${node.slug}/`}>
+        <a className="read" href={`/n/${node.slug}/`} onClick={(e) => readerClick(e, `/n/${node.slug}/`, landOn)}>
           阅读全文 →
         </a>
         {node.repo && (

@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { CATS } from '../../lib/meta';
 import { useUI } from '../store';
+import { openReader } from '../reader';
 import type { World } from '../world';
 
 export function Palette({ world }: { world: World }) {
@@ -42,7 +43,7 @@ export function Palette({ world }: { world: World }) {
   const close = () => setPalette(false);
   const go = (i: number) => {
     close();
-    if (i >= world.n) location.href = `/n/${moons[i - world.n].slug}/`;
+    if (i >= world.n) openReader(`/n/${moons[i - world.n].slug}/`, useUI.getState().landOn);
     else select(i);
   };
 

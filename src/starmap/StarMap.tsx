@@ -5,6 +5,7 @@ import { PerformanceMonitor } from '@react-three/drei';
 import { MotionConfig } from 'motion/react';
 import { CONFIG, type Tier } from './config';
 import { loadView, saveView, type SavedView } from './resume';
+import { openReader } from './reader';
 import { coarsePointer, detectTier, forcedTier, hasWebGL, introSeen, isCompact, markIntroSeen, qualityLadder, reducedMotion } from './device';
 import { useUI } from './store';
 import { clamp, World, type GraphData } from './world';
@@ -128,6 +129,7 @@ export default function StarMap({ graph }: { graph: GraphData }) {
   const selected = useUI((s) => s.selected);
   const compact = useUI((s) => s.compact);
   const hudIn = useUI((s) => s.hudIn);
+  const reading = useUI((s) => s.reading);
   const stage = useRef<HTMLDivElement>(null);
   const perfEl = useRef<HTMLDivElement>(null);
   const [showPerf] = useState(() => new URLSearchParams(location.search).has('fps'));
@@ -141,7 +143,14 @@ export default function StarMap({ graph }: { graph: GraphData }) {
       document.documentElement.classList.remove('has-3d');
       return;
     }
-    useUI.setState({ slugs: graph.nodes.map((n) => n.slug), compact: isCompact() });
+    useUI.setState({
+      slugs: graph.nodes.map((n) => n.slug),
+      compact: isCompact(),
+      landOn: (slug) => {
+        const i = graph.nodes.findIndex((n) => n.slug === slug || n.moons.some((m) => m.slug === slug));
+        if (i >= 0 && i !== useUI.getState().selected) useUI.getState().select(i);
+      },
+    });
     markIntroSeen();
   }, [ok, graph]);
 
@@ -226,6 +235,7 @@ export default function StarMap({ graph }: { graph: GraphData }) {
       raf = requestAnimationFrame(loop);
       if (t - last < interval) return;
       last = t;
+      if (useUI.getState().reading) return; // 文章盖着的时候不画
       advance(t / 1000); // R3F 的 advance 要的是秒，rAF 给的是毫秒
     };
     raf = requestAnimationFrame(loop);
@@ -282,7 +292,7 @@ export default function StarMap({ graph }: { graph: GraphData }) {
     const onKey = (e: KeyboardEvent) => {
       const ui = useUI.getState();
       const typing = (e.target as HTMLElement)?.closest?.('input, textarea');
-      if (ui.palette || typing) return;
+      if (ui.palette || typing || ui.reading) return;
       if (e.key === '/') {
         e.preventDefault();
         ui.setPalette(true);
@@ -298,7 +308,7 @@ export default function StarMap({ graph }: { graph: GraphData }) {
         const j = world.neighborInDirection(ui.selected, dir[0], dir[1]);
         if (j >= 0) ui.select(j);
       } else if (e.key === 'Enter' && ui.selected >= 0 && !(e.target as HTMLElement)?.closest?.('button, a')) {
-        location.href = `/n/${world.nodes[ui.selected].slug}/`;
+        openReader(`/n/${world.nodes[ui.selected].slug}/`, ui.landOn);
       }
     };
     addEventListener('keydown', onKey);
@@ -426,7 +436,7 @@ export default function StarMap({ graph }: { graph: GraphData }) {
             <Canvas
               flat
               dpr={quality.dpr}
-              frameloop={fpsCap ? 'never' : 'always'}
+              frameloop={fpsCap ? 'never' : reading ? 'demand' : 'always'} // 文章盖着的时候不画
               gl={{ antialias: !ladder[0].bloom, alpha: false, powerPreference: 'high-performance' }}
               camera={{ fov: CONFIG.camera.fov, near: 0.1, far: 2000, position: [0, 0, 190] }}
               key={glKey}

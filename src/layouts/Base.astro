@@ -19,6 +19,40 @@ const { title, description = 'IAN LI 的折腾记录与个人笔记：VPS、Linu
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)} />
     <title>{title}</title>
+    <script is:inline>
+      // 被星图的阅读层嵌着打开时（见 src/starmap/reader.ts）：告诉外面现在是哪一页；
+      // 点"返回星图"、按 Esc 不跳转，请外面把这一层关掉；站外链接新开标签页。
+      (function () {
+        if (window.parent === window) return;
+        try {
+          if (window.parent.location.origin !== location.origin) return;
+        } catch (e) {
+          return;
+        }
+        var send = function (sm) {
+          window.parent.postMessage({ sm: sm, path: location.pathname, title: document.title }, location.origin);
+        };
+        if (!/^\/n\//.test(location.pathname)) return send('reader-close');
+        document.addEventListener('DOMContentLoaded', function () {
+          send('reader-nav');
+        });
+        document.addEventListener('click', function (e) {
+          var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+          if (!a || e.defaultPrevented) return;
+          var u = new URL(a.href, location.href);
+          if (u.origin !== location.origin) {
+            a.target = '_blank';
+            a.rel = 'noopener';
+          } else if (u.pathname === '/') {
+            e.preventDefault();
+            send('reader-close');
+          }
+        });
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') send('reader-close');
+        });
+      })();
+    </script>
     <slot name="head" />
   </head>
   <body class={bodyClass}>

@@ -12,6 +12,9 @@ interface UIState {
   slugs: string[];
   hudIn: boolean; // 开场走到 hudAt：界面淡入
   nameIn: boolean; // 开场走到 nameAt：名字解码出现
+  reading: boolean; // 阅读层开着（文章盖在星图上）：星图暂停渲染、不响应键盘
+  /** 阅读层关掉后：落到那篇文章对应的节点上（下属笔记落到父节点） */
+  landOn: (slug: string) => void;
   select: (i: number) => void;
   deselect: () => void;
   toggleCat: (c: Cat) => void;
@@ -22,6 +25,7 @@ interface UIState {
 }
 
 const setHash = (slug: string | null) => {
+  if (history.state?.smReader) return; // 阅读层开着时地址栏是文章的地址，不要动
   const url = slug ? `#${slug}` : location.pathname + location.search;
   history.replaceState(null, '', url);
 };
@@ -35,6 +39,8 @@ export const useUI = create<UIState>((set, get) => ({
   slugs: [],
   hudIn: false,
   nameIn: false,
+  reading: false,
+  landOn: () => {},
   select: (i) => {
     set({ selected: i });
     setHash(get().slugs[i] ?? null);

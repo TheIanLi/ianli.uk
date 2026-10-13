@@ -45,7 +45,7 @@ repo: https://github.com/TheIanLi/xxx   # 可选，只填已公开的仓库
 图片放在 md 旁边，用 `![说明](./图片.png)` 引用，构建时自动压缩。
 links/parent 写了不存在的 slug 会**直接构建失败**并提示是哪个文件。
 
-从文章页回星图（点"返回星图"或浏览器后退）：不重播开场，恢复离开前的画面（镜头、选中的节点、节点位置）。离开时存进 sessionStorage，回来时读（`src/starmap/resume.ts`，入口在 `StarMap.tsx` 的 `resumeView()`）；手动刷新、从站外进来、点"重放开场"照常播。注意：`npm run dev` 下 3D 目前起不来（报 `@vitejs/plugin-react can't detect preamble`，main 上也一样），测 3D 用 `npm run build && npx astro preview --port 4322`。
+从文章页回星图（点"返回星图"或浏览器后退）：不重播开场，恢复离开前的画面（镜头、选中的节点、节点位置）。离开时存进 sessionStorage，回来时读（`src/starmap/resume.ts`，入口在 `StarMap.tsx` 的 `resumeView()`）；手动刷新、从站外进来、点"重放开场"照常播。
 
 下属笔记（写了 `parent` 的）：不进星图的节点和连线（`src/lib/graph.ts` 的 `starGraph()` 过滤），编号跟父节点走（N-19.1、N-19.2…）；在父节点的卡片里列在"收录"下，搜索能搜到（选中直接去文章页），2D 列表里缩在父节点下面，文章页顶部有面包屑。卫星的大小、轨道、亮度在 `CONFIG.moons`，画法在 `src/starmap/scene/Moons.tsx`。
 

@@ -271,6 +271,23 @@
 }
 .sm-panel .chip i { width: 6px; height: 6px; border-radius: 50%; background: var(--c); }
 .sm-panel .chip:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(220, 224, 255, 0.3); }
+/* 下属笔记（星图上的小卫星）：一行一条，点了直接去文章页 */
+.sm-panel .moons { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.sm-panel .moons a {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  padding: 6px 8px;
+  margin: 0 -8px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink);
+  text-decoration: none;
+  transition: background 0.2s;
+}
+.sm-panel .moons a i { flex: none; width: 5px; height: 5px; border-radius: 50%; background: var(--c); transform: translateY(-2px); }
+.sm-panel .moons a:hover { background: rgba(255, 255, 255, 0.06); }
 .sm-panel .p-foot {
   display: flex;
   align-items: center;

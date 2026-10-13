@@ -60,6 +60,21 @@ function Body({ world, node, onPick }: { world: World; node: GraphNode; onPick: 
           </div>
         </>
       )}
+      {node.moons.length > 0 && (
+        <>
+          <div className="p-sub">收录 · {node.moons.length}</div>
+          <ul className="moons">
+            {node.moons.map((m) => (
+              <li key={m.slug}>
+                <a href={`/n/${m.slug}/`}>
+                  <i />
+                  {m.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
       <div className="p-foot">
         <a className="read" href={`/n/${node.slug}/`}>
           阅读全文 →

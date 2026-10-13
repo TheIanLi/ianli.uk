@@ -14,6 +14,7 @@ import { Intro } from './Intro';
 import { Ripple } from './Ripple';
 import { Starfield } from './Starfield';
 import { NodeShape } from './NodeShapes';
+import { Moons } from './Moons';
 
 interface SceneProps {
   world: World;
@@ -35,6 +36,7 @@ export function Scene({ world, tier, quality, reduce }: SceneProps) {
       {world.nodes.map((n, i) => (
         <NodeShape key={n.slug} world={world} i={i} tier={tier} />
       ))}
+      <Moons world={world} reduce={reduce} />
       <Driver world={world} reduce={reduce} />
       <Intro world={world} tier={tier} reduce={reduce} />
       <Ripple world={world} reduce={reduce} />

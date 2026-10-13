@@ -9,7 +9,7 @@ const { nodes } = await getGraph();
 <div class="node-list">
   {
     CAT_ORDER.map((k) => {
-      const list = nodes.filter((n) => n.cat === k);
+      const list = nodes.filter((n) => n.cat === k && !n.parent);
       return (
         list.length > 0 && (
           <section style={`--c:${CATS[k].color}`}>
@@ -26,6 +26,15 @@ const { nodes } = await getGraph();
                     <small>{n.code}</small>
                   </a>
                   <span>{n.summary}</span>
+                  {n.moons.length > 0 && (
+                    <ul class="sub">
+                      {n.moons.map((m) => (
+                        <li id={m.slug}>
+                          <a href={`/n/${m.slug}/`}>{m.title}</a>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </li>
               ))}
             </ul>
@@ -84,6 +93,20 @@ const { nodes } = await getGraph();
     font-size: 10px;
     color: var(--ink-3);
     letter-spacing: 0.1em;
+  }
+  ul.sub {
+    margin: 8px 0 0;
+    padding-left: 14px;
+    border-left: 1px solid var(--hair);
+    gap: 4px;
+  }
+  ul.sub a {
+    margin: 0;
+    font-size: 13.5px;
+    color: var(--ink-2);
+  }
+  ul.sub a:hover {
+    color: var(--c);
   }
   li span {
     display: block;

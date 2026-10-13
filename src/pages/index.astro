@@ -2,9 +2,9 @@
 // 首页：3D 星图岛 + 2D 节点列表（无 WebGL / 无 JS 时的退路，也给搜索引擎读）
 import Base from '../layouts/Base.astro';
 import NodeList from '../components/NodeList.astro';
-import { getGraph } from '../lib/graph';
+import { getGraph, starGraph } from '../lib/graph';
 
-const graph = await getGraph();
+const graph = starGraph(await getGraph()); // 下属笔记不单独成星
 // 节点数据内嵌到页面里，启动器读出来交给 3D（转义 <，防止内容里出现 </script> 截断）
 const graphJson = JSON.stringify(graph).replace(/</g, '\\u003c');
 ---

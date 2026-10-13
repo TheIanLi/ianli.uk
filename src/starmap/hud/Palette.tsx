@@ -17,10 +17,14 @@ export function Palette({ world }: { world: World }) {
     () => world.nodes.map((n) => [n.title, n.slug, n.code, CATS[n.cat].name, ...n.aliases].join(' ').toLowerCase()),
     [world],
   );
+  // 下属笔记（星图上的小卫星）也能搜到：编号接在节点后面，选中后直接去文章页。不输入时不列出来，免得太长
+  const moons = useMemo(() => world.nodes.flatMap((n, parent) => n.moons.map((m) => ({ ...m, parent }))), [world]);
+  const moonHay = useMemo(() => moons.map((m) => [m.title, m.slug, ...m.aliases].join(' ').toLowerCase()), [moons]);
   const hits = useMemo(() => {
     const s = q.trim().toLowerCase().replace(/^(cd|goto)\s+/, '');
-    return world.nodes.map((_, i) => i).filter((i) => !s || haystack[i].includes(s));
-  }, [q, haystack, world]);
+    const nodes = world.nodes.map((_, i) => i).filter((i) => !s || haystack[i].includes(s));
+    return s ? [...nodes, ...moons.map((_, k) => world.n + k).filter((_, k) => moonHay[k].includes(s))] : nodes;
+  }, [q, haystack, world, moons, moonHay]);
 
   useEffect(() => {
     if (open) {
@@ -38,7 +42,8 @@ export function Palette({ world }: { world: World }) {
   const close = () => setPalette(false);
   const go = (i: number) => {
     close();
-    select(i);
+    if (i >= world.n) location.href = `/n/${moons[i - world.n].slug}/`;
+    else select(i);
   };
 
   return (
@@ -81,6 +86,19 @@ export function Palette({ world }: { world: World }) {
         <ul className="res" role="listbox" ref={list}>
           {hits.length === 0 && <li className="empty">goto: {q}: 没有这个节点</li>}
           {hits.map((i, k) => {
+            if (i >= world.n) {
+              const m = moons[i - world.n];
+              const p = world.nodes[m.parent];
+              return (
+                <li key={m.slug} role="option" aria-selected={k === cur} className={k === cur ? 'on' : undefined}>
+                  <button type="button" style={{ '--c': CATS[p.cat].color } as CSSProperties} onClick={() => go(i)}>
+                    <i />
+                    <span>{m.title}</span>
+                    <em>{p.title} →</em>
+                  </button>
+                </li>
+              );
+            }
             const n = world.nodes[i];
             return (
               <li key={n.slug} role="option" aria-selected={k === cur} className={k === cur ? 'on' : undefined}>

@@ -46,6 +46,7 @@ repo: https://github.com/TheIanLi/xxx   # 可选，只填已公开的仓库
 links/parent 写了不存在的 slug 会**直接构建失败**并提示是哪个文件。
 
 在星图里读文章（阅读层）：点"阅读全文"、卡片里的下属笔记、搜索里的下属笔记，都不离开首页，文章用同源 iframe 盖在星图上（`src/starmap/reader.ts`），星图暂停渲染；地址栏用 pushState 变成文章地址，文章页一侧的配合脚本在 `src/layouts/Base.astro`（报告换页、把"返回星图"和 Esc 变成关闭这一层）。关掉后落到最后读的那篇对应的节点上。直接打开 `/n/<slug>/` 的人看到的仍是独立文章页。
+阅读层的两处提速（2026-10-13，都是为了不卡在"浏览器头一回排汉字很慢"上）：选中一颗星 `CONFIG.ui.readerPreload` 秒后，在后台把它的文章预载进一个全透明的 iframe，并把页面一块块分开排版（一次排完会把星图卡住半秒），点"阅读全文"时直接显示；关掉后那一页留着，再点开是原来读到的位置。`hud/Panel.tsx` 的 `PanelWarm` 在加载画面期间把所有卡片的字隐形排一遍，之后点星的第一帧不再花 200 多毫秒排版。
 
 从独立文章页回星图（点"返回星图"或浏览器后退）：不重播开场，恢复离开前的画面（镜头、选中的节点、节点位置）。离开时存进 sessionStorage，回来时读（`src/starmap/resume.ts`，入口在 `StarMap.tsx` 的 `resumeView()`）；手动刷新、从站外进来、点"重放开场"照常播。
 
@@ -66,6 +67,9 @@ links/parent 写了不存在的 slug 会**直接构建失败**并提示是哪个
 - 测试参数：`?tier=low|mid|high` 强制档位（并锁定，不自动降档）
 - 测试环境注意：WSL 里的无头 Chrome 只有 CPU 软件渲染（每秒 1–2 帧），帧率和动画时序都不可信，只适合看静态画面；
   帧率要用户在真机上用 `?fps` 看。在 Windows 原生环境或连接 Windows 上带 GPU 的 Chrome 会准确得多
+- 从 WSL 用真显卡测（2026-10-13 试通）：启动 Windows 的 `chrome.exe --headless=new --remote-debugging-port=9333 --user-data-dir=<Windows 临时目录> --force-device-scale-factor=1.5 --window-size=1707,960`，
+  再用 playwright-core 的 `connectOverCDP('http://127.0.0.1:9333')` 连上去（要设 `NO_PROXY=127.0.0.1`）；本地预览 `127.0.0.1:4322` 它能直接打开。
+  不要调 `setViewportSize`（会把缩放重置成 100%）。卡顿原因用 `long-animation-frame` 和 `devtools.timeline` 跟踪看。用完用 CDP 的 `Browser.close` 关掉
 - 仅开发模式：`?introSpeed=0.1` 慢放开场、`?timeScale=0.1` 慢放飞行和涟漪；控制台 `__sm` 是 world 对象
 - 无头浏览器（软件渲染）帧率很低，会触发自动降档；截图测试要加 `?tier=high`
 

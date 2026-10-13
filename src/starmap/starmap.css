@@ -280,10 +280,18 @@
   height: 100%;
   border: 0;
   background: #05060d;
+  /* 没加 .on 时是"预载"状态：已经载好、排好版、画好，只是全透明、不挡鼠标（同时带 inert 属性，键盘和读屏器也进不去）。
+     不用 visibility: hidden：那样浏览器要等显示的那一刻才画，长文章淡入的第一帧会卡一百多毫秒 */
   opacity: 0;
+  pointer-events: none;
   transition: opacity 0.18s ease;
 }
-.sm-reader.on { opacity: 1; }
+.sm-reader.on { opacity: 1; pointer-events: auto; }
+/* 预热用的隐形卡片：只为了让浏览器提前把字排一遍，见 Panel.tsx 的 PanelWarm */
+.sm-panel.sm-warm { visibility: hidden; pointer-events: none; contain: strict; height: 0; padding: 0; border: 0; overflow: hidden; z-index: -1; box-shadow: none; }
+.sm-warm .warm-prose { font-size: 16px; line-height: 1.85; }
+.sm-warm .warm-prose b { display: block; font-size: 22px; font-weight: 700; }
+.sm-warm .warm-prose code { display: block; font-family: var(--font-mono); font-size: 13.5px; }
 /* 下属笔记（星图上的小卫星）：一行一条，点了直接去文章页 */
 .sm-panel .moons { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
 .sm-panel .moons a {

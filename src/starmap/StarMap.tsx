@@ -5,7 +5,7 @@ import { PerformanceMonitor } from '@react-three/drei';
 import { MotionConfig } from 'motion/react';
 import { CONFIG, type Tier } from './config';
 import { loadView, saveView, type SavedView } from './resume';
-import { openReader } from './reader';
+import { openReader, preloadReader } from './reader';
 import { coarsePointer, detectTier, forcedTier, hasWebGL, introSeen, isCompact, markIntroSeen, qualityLadder, reducedMotion } from './device';
 import { useUI } from './store';
 import { clamp, World, type GraphData } from './world';
@@ -13,7 +13,7 @@ import { Scene } from './scene/Scene';
 import { setFatalHandler } from './scene/safeFrame';
 import { Hud } from './hud/Hud';
 import { Labels } from './hud/Labels';
-import { Panel } from './hud/Panel';
+import { Panel, PanelWarm } from './hud/Panel';
 import { Palette } from './hud/Palette';
 import { NameDust } from './hud/NameDust';
 import { PerfStats } from './scene/PerfStats';
@@ -194,6 +194,13 @@ export default function StarMap({ graph }: { graph: GraphData }) {
     addEventListener('hashchange', onHash);
     return () => removeEventListener('hashchange', onHash);
   }, [ok, world, reduce]);
+
+  // 选中一颗星后，稍等一下在后台预载它的文章，点"阅读全文"时就不用等
+  useEffect(() => {
+    if (!ok || selected < 0) return;
+    const id = setTimeout(() => preloadReader(`/n/${world.nodes[selected].slug}/`), CONFIG.ui.readerPreload * 1000);
+    return () => clearTimeout(id);
+  }, [ok, selected, world]);
 
   // 选中/取消时调整镜头距离；视口偏移由 Panel 按实际尺寸设置
   useEffect(() => {
@@ -480,6 +487,7 @@ export default function StarMap({ graph }: { graph: GraphData }) {
         <Hud world={world} reduce={reduce} />
         <NameDust key={nonce} world={world} reduce={reduce} />
         <Panel world={world} />
+        <PanelWarm world={world} />
         <Palette world={world} />
       </div>
     </MotionConfig>

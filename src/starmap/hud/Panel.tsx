@@ -1,5 +1,5 @@
 // 节点详情：电脑上是右侧玻璃卡片，手机上是可拖动的底部抽屉。
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { memo, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { AnimatePresence, motion, useDragControls } from 'motion/react';
 import { CATS, STATUS } from '../../lib/meta';
 import { useUI } from '../store';
@@ -90,6 +90,27 @@ function Body({ world, node, onPick }: { world: World; node: GraphNode; onPick: 
     </>
   );
 }
+
+/** 预热文字：把每张卡片会出现的字，用卡片的字体字号先排一遍（看不见）。
+ *  浏览器头一回排没见过的汉字很慢，实测一张卡片要 150–250ms，全卡在点击后的第一帧。
+ *  这里在加载画面期间一次做掉，之后点星就不再卡在排版上。
+ *  末尾那块是给文章用的：同样的字按文章正文、标题、代码的字号再排一遍，
+ *  阅读层头一回排文章能从 0.7 秒左右降到 0.25 秒左右（字号对应 src/pages/n/[slug].astro 的 .prose）。 */
+export const PanelWarm = memo(function PanelWarm({ world }: { world: World }) {
+  const text = world.nodes.map((n) => `${n.title} ${n.summary} ${n.moons.map((m) => m.title).join(' ')}`).join(' ');
+  return (
+    <aside className="sm-panel card sm-warm" aria-hidden="true">
+      {world.nodes.map((n) => (
+        <Body key={n.slug} world={world} node={n} onPick={() => {}} />
+      ))}
+      <div className="warm-prose">
+        <p>{text}</p>
+        <b>{text}</b>
+        <code>{text}</code>
+      </div>
+    </aside>
+  );
+});
 
 export function Panel({ world }: { world: World }) {
   const selected = useUI((s) => s.selected);

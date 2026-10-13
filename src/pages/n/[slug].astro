@@ -21,6 +21,12 @@ const parent = node.parent ? bySlug.get(node.parent) : undefined;
 const children = nodes.filter((n) => n.parent === node.slug);
 const cat = CATS[node.cat];
 const st = STATUS[node.status];
+// 纠错入口：跳到仓库的新建 Issue 页，标题和页面地址先填好
+const issueUrl =
+  'https://github.com/TheIanLi/ianli.uk/issues/new?title=' +
+  encodeURIComponent(`[纠错] ${node.title}`) +
+  '&body=' +
+  encodeURIComponent(`页面：https://ianli.uk/n/${node.slug}/\n\n哪里不对：\n\n应该是：\n`);
 ---
 
 <Base title={`${node.title} · IAN LI`} description={node.summary} bodyClass="starfield">
@@ -78,6 +84,10 @@ const st = STATUS[node.status];
         </section>
       )
     }
+
+    <footer class="fix">
+      发现哪里写错了？<a href={issueUrl} target="_blank" rel="noopener">在 GitHub 上告诉我 ↗</a>
+    </footer>
   </main>
 </Base>
 
@@ -108,6 +118,21 @@ const st = STATUS[node.status];
   .back:hover {
     color: var(--ink);
     border-color: rgba(220, 224, 255, 0.3);
+  }
+  .fix {
+    font-size: 13px;
+    color: var(--ink-3);
+    border-top: 1px solid var(--hair);
+    padding-top: 18px;
+  }
+  .fix a {
+    color: var(--ink-2);
+    text-decoration: none;
+    border-bottom: 1px solid var(--hair);
+    transition: color 0.2s;
+  }
+  .fix a:hover {
+    color: var(--c);
   }
   .crumb {
     color: var(--ink-3);
